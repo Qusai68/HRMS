@@ -1,4 +1,5 @@
 ﻿using HRMS.Dtos.Departments;
+using HRMS.Dtos.Employee;
 using HRMS.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace HRMS.Controllers
     [ApiController]
     public class DepartmentsController : ControllerBase
     {
-        public List<Department> departments = new List<Department>()
+        public static List<Department> departments = new List<Department>()
         {
         new Department(){Id =1, Name ="Human Resources" , Description="Hr Department" , FloorNumber=1 },
 
@@ -19,10 +20,11 @@ namespace HRMS.Controllers
 
         };
         [HttpGet("GetByCriteri")]
-        public IActionResult GetByCriteri(string? name )
+        public IActionResult GetByCriteri([FromQuery] FilterDepartmentsDto filterDto)
         {
             var result = from department in departments
-                         where (name == null || department.Name == name)
+                         where (filterDto.Name == null || department.Name.ToUpper().Contains(filterDto.Name.ToUpper())) &&
+                         (filterDto.FloorNumber == null || department.FloorNumber == filterDto.FloorNumber)
                          orderby department.Id descending
                          select new DepartmentDto
                          {
@@ -34,7 +36,61 @@ namespace HRMS.Controllers
 
                          };
             return Ok(result);
-        
+
+        }
+        [HttpGet("GetById/{id}")]
+        public IActionResult GetById(long id)
+        {
+            var deartment = departments.Select(x => new DepartmentDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Description = x.Description,
+                FloorNumber = x.FloorNumber,
+
+
+
+            }).FirstOrDefault(x => x.Id == id);
+            if (deartment == null)
+                return NotFound("Department Not Found");
+            return Ok(deartment);
+        }
+        [HttpPost("Add")]
+        public IActionResult Add([FromBody]SaveDeparetmentDto saveDto)
+        {
+            var deartment = new Department
+            {
+                Id = (departments.LastOrDefault()?.Id ?? 0) + 1,
+                Name = saveDto.Name,
+                Description = saveDto.Description,
+                FloorNumber = saveDto.FloorNumber,
+
+            };
+            departments.Add(deartment);
+            return Ok();
+
+        }
+        [HttpPut("Update")]
+        public IActionResult Update([FromBody] SaveDeparetmentDto saveDto)
+        { 
+        var department =departments.FirstOrDefault(x => x.Id == saveDto.Id);
+            if (department==null)
+                return NotFound("Department Not Found");
+            department.Name = saveDto.Name;
+            department.Description = saveDto.Description;
+            department.FloorNumber = saveDto.FloorNumber;
+            return Ok();
+        }
+        [HttpDelete("Delete/{id}")]
+        public IActionResult Delete(long id)
+        {
+            var department = departments.FirstOrDefault(x => x.Id == id);
+            if (department == null)
+                return NotFound("Department Not Found");
+            departments.Remove(department);
+            return Ok();
+
         }
     }
 }
+
