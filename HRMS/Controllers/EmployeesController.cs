@@ -1,4 +1,5 @@
 ﻿
+using HRMS.DbContexts;
 using HRMS.DTO.Employee;
 using HRMS.Dtos.Employee;
 using HRMS.Models;
@@ -17,25 +18,36 @@ namespace HRMS.Controllers
         public static List<Employee> employees = new List<Employee>()
         {
 
-             new Employee(){ Id=1,FirstName ="QUSAI",LastNmae="Mohammad", Email="Qusai@123.com",Position="Developer", BirthDate=new DateTime(2005,10,20)},
-            new Employee() { Id=2,FirstName ="Rand ",LastNmae="Abbad", Position="HR", BirthDate=new DateTime(2003,11,5)},
-             new Employee(){ Id=3,FirstName ="Mohammad",LastNmae="Ezate", Position="Developer", BirthDate=new DateTime(2002,6,7)},
+             new Employee(){ Id=1,FirstName ="QUSAI",LastName="Mohammad", Email="Qusai@123.com",Position="Developer", BirthDate=new DateTime(2005,10,20)},
+            new Employee() { Id=2,FirstName ="Rand ",LastName="Abbad", Position="HR", BirthDate=new DateTime(2003,11,5)},
+             new Employee(){ Id=3,FirstName ="Mohammad",LastName="Ezate", Position="Developer", BirthDate=new DateTime(2002,6,7)},
 
         };
+       private readonly HRMSContexts _dbcontext;
+        public EmployeesController(HRMSContexts dbcontext)
+        {
+            _dbcontext = dbcontext;
+        }
+
         [HttpGet("GetByCriteria")]//عشان تحول الميثود ل API ENDPOINT
         public IActionResult GetByCriteria([FromQuery]SearchEmployeeDto employeeDto) //Method--> api Endpoint 
         {
-            var result = from employee in employees
+            var result = from employee in _dbcontext.Employees
+                         from Department in _dbcontext.Departments.Where(x=>x.Id==employee.DepartmentId).DefaultIfEmpty()//==left join
                          where (employeeDto.position == null || employee.Position.ToUpper().Contains(employeeDto.Posisiton.ToUpper()))&&
                          (employeeDto.Name == null || employee.FirstName.ToUpper().Contains(employeeDto.Name.ToUpper()))
                          orderby employee.Id descending
                          select new EmployeeDto
                          {
                              Id = employee.Id,
-                             Name = employee.FirstName + " " + employee.LastNmae,
+                             Name = employee.FirstName + " " + employee.LastName,
                              Position = employee.Position,
                              BirthDate = employee.BirthDate,
-                             Email = employee.Email
+                             Email = employee.Email,
+                             Salary= employee.Salary,
+                             DepartmentId= employee.DepartmentId,
+                                ManagerId= employee.ManagerId,
+                                DepartmentName=Department.Name
                          };
 
             return Ok(result);
@@ -52,10 +64,10 @@ namespace HRMS.Controllers
         {
             if (id == 0)
                 return BadRequest("Id Value Is Invalid");
-            var result = employees.Select(x => new EmployeeDto
+            var result =employees.Select(x => new EmployeeDto
             {
                 Id = x.Id,
-                Name = x.FirstName + " " + x.LastNmae,
+                Name = x.FirstName + " " + x.LastName,
                 Position = x.Position,
                 BirthDate = x.BirthDate,
                 Email = x.Email
@@ -76,7 +88,7 @@ namespace HRMS.Controllers
                                                                 //؟؟ بتعمل الشرط الي هوه زيرو
 
                 FirstName = employeeDto.FirstName,
-                LastNmae = employeeDto.LastNmae,
+                LastName = employeeDto.LastNmae,
                 Email = employeeDto.Email,
                 BirthDate = employeeDto.BirthDate,
                 Position = employeeDto.Position,
@@ -99,7 +111,7 @@ namespace HRMS.Controllers
                 return NotFound("Employee Not Exist");
 
             employee.FirstName = employeeDto.FirstName;
-            employee.LastNmae = employeeDto.LastNmae;
+            employee.LastName = employeeDto.LastNmae;
             employee.Email = employeeDto.Email;
             employee.BirthDate = employeeDto.BirthDate;
             employee.Position = employeeDto.Position;
