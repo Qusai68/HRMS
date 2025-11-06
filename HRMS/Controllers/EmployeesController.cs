@@ -23,18 +23,19 @@ namespace HRMS.Controllers
              new Employee(){ Id=3,FirstName ="Mohammad",LastName="Ezate", Position="Developer", BirthDate=new DateTime(2002,6,7)},
 
         };
-       private readonly HRMSContexts _dbcontext;
+        private readonly HRMSContexts _dbcontext;
         public EmployeesController(HRMSContexts dbcontext)
         {
             _dbcontext = dbcontext;
         }
 
         [HttpGet("GetByCriteria")]//عشان تحول الميثود ل API ENDPOINT
-        public IActionResult GetByCriteria([FromQuery]SearchEmployeeDto employeeDto) //Method--> api Endpoint 
+        public IActionResult GetByCriteria([FromQuery] SearchEmployeeDto employeeDto) //Method--> api Endpoint 
         {
             var result = from employee in _dbcontext.Employees
-                         from Department in _dbcontext.Departments.Where(x=>x.Id==employee.DepartmentId).DefaultIfEmpty()//==left join
-                         where (employeeDto.position == null || employee.Position.ToUpper().Contains(employeeDto.Posisiton.ToUpper()))&&
+                         from department in _dbcontext.Departments.Where(x => x.Id == employee.DepartmentId).DefaultIfEmpty()//==left join
+                         from manager in _dbcontext.Employees.Where(x => x.Id == employee.ManagerId).DefaultIfEmpty()//left join
+                         where (employeeDto.position == null || employee.Position.ToUpper().Contains(employeeDto.Posisiton.ToUpper())) &&
                          (employeeDto.Name == null || employee.FirstName.ToUpper().Contains(employeeDto.Name.ToUpper()))
                          orderby employee.Id descending
                          select new EmployeeDto
@@ -42,12 +43,14 @@ namespace HRMS.Controllers
                              Id = employee.Id,
                              Name = employee.FirstName + " " + employee.LastName,
                              Position = employee.Position,
-                             BirthDate = employee.BirthDate,
+                              BirthDate = employee.BirthDate,
                              Email = employee.Email,
-                             Salary= employee.Salary,
-                             DepartmentId= employee.DepartmentId,
-                                ManagerId= employee.ManagerId,
-                                DepartmentName=Department.Name
+                             Salary = employee.Salary,
+                             DepartmentId = employee.DepartmentId,
+                             DepartmentName = department.Name,
+                             ManagerId = employee.ManagerId,
+
+                             ManagerName = manager.FirstName
                          };
 
             return Ok(result);
@@ -64,13 +67,20 @@ namespace HRMS.Controllers
         {
             if (id == 0)
                 return BadRequest("Id Value Is Invalid");
-            var result =employees.Select(x => new EmployeeDto
+            var result = _dbcontext.Employees.Select(x => new EmployeeDto
             {
                 Id = x.Id,
                 Name = x.FirstName + " " + x.LastName,
                 Position = x.Position,
                 BirthDate = x.BirthDate,
-                Email = x.Email
+                Email = x.Email,
+                Salary = x.Salary,
+                DepartmentId = x.DepartmentId,
+                DepartmentName = "",
+
+                ManagerId = x.ManagerId,
+                ManagerName = ""
+
             }).FirstOrDefault(x => x.Id == id);
             if (result == null)
                 return NotFound("Employee Not Found");
@@ -83,20 +93,23 @@ namespace HRMS.Controllers
         {
             var employee = new Employee()
             {
-                Id = (employees.LastOrDefault()?.Id ?? 0) + 1,  //عملنا هاي الحركه عشان الداتا
-                                                                //اذا كانت فاضيه حيعمل ايرور فا
-                                                                //؟؟ بتعمل الشرط الي هوه زيرو
+                //Id = (employees.LastOrDefault()?.Id ?? 0) + 1,  //عملنا هاي الحركه عشان الداتا
+                Id = 0,                                                //اذا كانت فاضيه حيعمل ايرور فا
+                                                                       //؟؟ بتعمل الشرط الي هوه زيرو
 
                 FirstName = employeeDto.FirstName,
                 LastName = employeeDto.LastNmae,
                 Email = employeeDto.Email,
                 BirthDate = employeeDto.BirthDate,
                 Position = employeeDto.Position,
+                Salary = employeeDto.Salary,
+                DepartmentId = employeeDto.DepartmentId,
 
 
             };
 
-            employees.Add(employee);
+            _dbcontext.Employees.Add(employee);
+            _dbcontext.SaveChanges();//عشان تحفظ التعديلات في الداتا بيس
 
             return Ok();
         }
@@ -106,7 +119,7 @@ namespace HRMS.Controllers
         public IActionResult Update([FromBody] SaveEmployeeDto employeeDto)
         {
 
-            var employee = employees.FirstOrDefault(x => x.Id == employeeDto.Id);
+            var employee = _dbcontext.Employees.FirstOrDefault(x => x.Id == employeeDto.Id);
             if (employee == null)
                 return NotFound("Employee Not Exist");
 
@@ -115,8 +128,12 @@ namespace HRMS.Controllers
             employee.Email = employeeDto.Email;
             employee.BirthDate = employeeDto.BirthDate;
             employee.Position = employeeDto.Position;
-            return Ok();
+            employee.Salary = employeeDto.Salary;
+            employee.DepartmentId = employeeDto.DepartmentId;
+            employee.ManagerId = employeeDto.ManagerId;
 
+            _dbcontext.SaveChanges();
+            return Ok();
 
 
 
@@ -125,10 +142,12 @@ namespace HRMS.Controllers
         public IActionResult Delete([FromQuery] long id)
         {
 
-            var employee = employees.FirstOrDefault(x => x.Id == id);
+            var employee = _dbcontext.Employees.FirstOrDefault(x => x.Id == id);
             if (employee == null)
                 return NotFound("Employee Does Not Exist");
-            employees.Remove(employee);
+            _dbcontext.Employees.Remove(employee);
+
+            _dbcontext.SaveChanges();
             return Ok();
 
 

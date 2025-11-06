@@ -37,7 +37,7 @@ namespace HRMS.Controllers
                          };
             return Ok(result);
 
-        }
+        } 
         [HttpGet("GetById/{id}")]
         public IActionResult GetById(long id)
         {
