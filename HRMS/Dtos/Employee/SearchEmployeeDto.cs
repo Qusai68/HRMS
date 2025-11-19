@@ -2,10 +2,9 @@
 {
     public class SearchEmployeeDto
     {
-        internal object position;
 
         public string? Name { get; set; }
+        public long? PositionId { get; set; }
 
-        public string? Posisiton{ get; set; }
     }
 }
