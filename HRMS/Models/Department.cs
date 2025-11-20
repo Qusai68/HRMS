@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HRMS.Mod411els;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace HRMS.Models
 {
@@ -9,5 +12,9 @@ namespace HRMS.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public int? FloorNumber { get; set; }
+
+        [ForeignKey("Type")]
+        public long TypeId { get; set; }
+        public Lookup Type { get; set; }
     }
 }
