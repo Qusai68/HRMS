@@ -15,19 +15,19 @@ using System.Xml.Linq;
 
 namespace HRMS.Controllers
 {
-    [Authorize]// save all the endpoints in this controller
+   // [Authorize]// save all the endpoints in this controller
     [Route("api/[controller]")] // data Annotation
     [ApiController]// data Annotation 
     public class EmployeesController : ControllerBase
     {
-        public static List<Employee> employees = new List<Employee>()
-        {
+        //public static List<Employee> employees = new List<Employee>()
+       // {
 
             //new Employee(){ Id=1,FirstName ="QUSAI",LastName="Mohammad", Email="Qusai@123.com",Position="Developer", BirthDate=new DateTime(2005,10,20)},
             //new Employee() { Id=2,FirstName ="Rand ",LastName="Abbad", Position="HR", BirthDate=new DateTime(2003,11,5)},
             // new Employee(){ Id=3,FirstName ="Mohammad",LastName="Ezate", Position="Developer", BirthDate=new DateTime(2002,6,7)},
 
-        };
+        //};
         private readonly HRMSContexts _dbcontext;
         public EmployeesController(HRMSContexts dbcontext)
         {
