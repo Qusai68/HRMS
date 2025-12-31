@@ -2,9 +2,9 @@
 
     <div class="card">
         <div class="card-header">
-           
+
             <h5>
-                 <i class="bi bi-funnel"></i>
+                <i class="bi bi-funnel"></i>
                 Filter
             </h5>
         </div>
@@ -49,13 +49,14 @@
 
         </div>
         <div class="card-body">
-            <table class="table able-striped">
+            <table class="table table table-striped">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">First</th>
-                        <th scope="col">Last</th>
-                        <th scope="col">Handle</th>
+                       @for (col of employeesTableColumns; track col) {
+                        <th>{{col}}</th>
+
+                       }
+
                     </tr>
                 </thead>
                 <tbody>
